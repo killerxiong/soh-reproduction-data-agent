@@ -1,0 +1,845 @@
+{
+  "schema_version": "step3_executable_reproduction_plan_v1",
+  "paper_id": "paper1_wang_2024_pinn_battery_soh",
+  "paper_name": "Physics-informed neural network for lithium-ion battery degradation stable modeling and prognosis",
+  "source_files": {
+    "step2_spec_path": "D:\\study\\Z01-Pycharmproject\\A09-Agent5\\outputs\\paper1\\_work\\repro_spec.json",
+    "paper_md_path": "D:\\study\\Z01-Pycharmproject\\A09-Agent5\\outputs\\paper1\\_work\\paper.md",
+    "supplementary_md_path": "D:\\study\\Z01-Pycharmproject\\A09-Agent5\\outputs\\paper1\\_work\\Supplementary information.md"
+  },
+  "reproduction_mode": {
+    "strict_paper_reproduction_possible": false,
+    "selected_mode": "feature_level_synthetic_executable_reproduction",
+    "reason": "The original raw experimental datasets, exact train/validation/test battery identities for the 10-cell synthetic setting, exact learning rate, epochs, learning-rate schedule, early stopping, and complete PDE equation implementation details are not fully available from the supplied materials. Therefore the plan reproduces the reported input-output structure, engineered feature space, PINN family, and executable training/evaluation pipeline using explicit synthetic-data and training assumptions.",
+    "what_is_reproduced": [
+      "paper-reported model input-output structure",
+      "paper-reported engineered feature space",
+      "paper-reported primary model family",
+      "complete train/validation/test execution pipeline",
+      "cell-level train/validation/test split at 6/2/2 using exactly 10 cells",
+      "test RMSE, test R2, and SOH true-versus-predicted plot generation"
+    ],
+    "what_is_not_reproduced": [
+      "paper original raw experimental dataset",
+      "paper exact numerical results",
+      "raw voltage/current/time feature extraction unless explicitly implemented",
+      "paper's four-dataset 387-cell benchmark",
+      "paper's exact 10-run averaged tables",
+      "paper's exact source-domain/target-domain transfer-learning experiments"
+    ]
+  },
+  "paper_understanding": {
+    "task": {
+      "task_type": "regression",
+      "target": "state-of-health (SOH)",
+      "target_formula": "SOH = current available capacity / initial capacity",
+      "sample_granularity": "per battery cycle"
+    },
+    "model": {
+      "primary_model_name": "Physics-informed neural network for battery SOH estimation",
+      "model_family": "PINN",
+      "baseline_models": [
+        "MLP",
+        "CNN",
+        "RF"
+      ],
+      "is_primary_model_clear": true
+    },
+    "paper_reported_feature_sets": [
+      {
+        "name": "16 engineered charge-curve features plus cycle/time",
+        "features": [
+          "current_mean",
+          "current_standard_deviation",
+          "current_kurtosis",
+          "current_skewness",
+          "current_window_charging_time",
+          "current_window_accumulated_charge",
+          "current_curve_slope",
+          "current_curve_entropy",
+          "voltage_mean",
+          "voltage_standard_deviation",
+          "voltage_kurtosis",
+          "voltage_skewness",
+          "voltage_window_charging_time",
+          "voltage_window_accumulated_charge",
+          "voltage_curve_slope",
+          "voltage_curve_entropy",
+          "cycle_index"
+        ],
+        "paper_reported": true
+      }
+    ],
+    "paper_reported_training_protocol": "Use 16 extracted features and cycle/time as model inputs; normalize features to [-1, 1]; train a PINN with data loss, monotonicity loss, and PDE/degradation-equation loss; split batteries approximately 6:2:2 for regular experiments; repeat experiments 10 times; Adam optimizer is reported in supplementary material; batch size is reported as 256 for XJTU and 512 for TJU/MIT/HUST.",
+    "paper_reported_metrics": [
+      "MAE",
+      "MAPE",
+      "RMSE"
+    ],
+    "important_notes": [
+      "The paper extracts voltage-window features from V in [V_end - 0.2, V_end].",
+      "Supplementary material specifies XJTU/TJU voltage range [4.0, 4.2] V and MIT/HUST voltage range [3.4, 3.6] V.",
+      "The paper extracts current-window features from current between 0.5 A and 0.1 A during constant-voltage charging.",
+      "The paper's PINN contains F(.) for the feature/cycle-to-SOH mapping and G(.) for degradation dynamics.",
+      "Transfer learning freezes G(.) and fine-tunes F(.), but transfer learning is not used in the default executable reproduction."
+    ]
+  },
+  "selected_reproduction_strategy": {
+    "strategy_name": "primary_feature_strategy",
+    "selection_rule": "Use primary_features as the default model input features.",
+    "primary_features": [
+      "current_mean",
+      "current_standard_deviation",
+      "current_kurtosis",
+      "current_skewness",
+      "current_window_charging_time",
+      "current_window_accumulated_charge",
+      "current_curve_slope",
+      "current_curve_entropy",
+      "voltage_mean",
+      "voltage_standard_deviation",
+      "voltage_kurtosis",
+      "voltage_skewness",
+      "voltage_window_charging_time",
+      "voltage_window_accumulated_charge",
+      "voltage_curve_slope",
+      "voltage_curve_entropy",
+      "cycle_index"
+    ],
+    "secondary_features": [
+      "chemistry_code",
+      "nominal_capacity_ah",
+      "upper_cutoff_voltage",
+      "lower_cutoff_voltage",
+      "ambient_temperature_c",
+      "protocol_code",
+      "cell_age_group"
+    ],
+    "model_input_features": [
+      "current_mean",
+      "current_standard_deviation",
+      "current_kurtosis",
+      "current_skewness",
+      "current_window_charging_time",
+      "current_window_accumulated_charge",
+      "current_curve_slope",
+      "current_curve_entropy",
+      "voltage_mean",
+      "voltage_standard_deviation",
+      "voltage_kurtosis",
+      "voltage_skewness",
+      "voltage_window_charging_time",
+      "voltage_window_accumulated_charge",
+      "voltage_curve_slope",
+      "voltage_curve_entropy",
+      "cycle_index"
+    ],
+    "features_to_generate_but_not_use_by_default": [
+      "chemistry_code",
+      "nominal_capacity_ah",
+      "upper_cutoff_voltage",
+      "lower_cutoff_voltage",
+      "ambient_temperature_c",
+      "protocol_code",
+      "cell_age_group"
+    ],
+    "target_column": "soh",
+    "also_generate_label_columns": [
+      "capacity_loss",
+      "Q_cell_loss"
+    ],
+    "reason": "The paper reports 16 extracted current/voltage statistical features plus cycle/time as PINN inputs. Chemistry and protocol metadata are useful for synthetic variability but are not reported as direct model inputs, so they are generated as secondary features and excluded by default."
+  },
+  "dataset_construction_plan": {
+    "dataset_mode": "feature_level_synthetic_dataset",
+    "num_cells": 10,
+    "cell_ids": [
+      "cell_001",
+      "cell_002",
+      "cell_003",
+      "cell_004",
+      "cell_005",
+      "cell_006",
+      "cell_007",
+      "cell_008",
+      "cell_009",
+      "cell_010"
+    ],
+    "cell_split": {
+      "split_unit": "cell",
+      "train_ratio": 0.6,
+      "val_ratio": 0.2,
+      "test_ratio": 0.2,
+      "train_cells_count": 6,
+      "val_cells_count": 2,
+      "test_cells_count": 2,
+      "no_cell_overlap": true
+    },
+    "cell_variability": {
+      "chemistry_assignment": {
+        "default": "mixed_NMC_LFP",
+        "num_nmc": 5,
+        "num_lfp": 5,
+        "note": "In feature-level synthetic mode, chemistry controls metadata/statistical offsets rather than raw electrochemical simulation."
+      },
+      "per_cell_random_effects": [
+        "initial_capacity_offset",
+        "degradation_rate_offset",
+        "knee_cycle_offset",
+        "feature_baseline_offset",
+        "feature_noise_level"
+      ],
+      "require_different_soh_trajectories": true,
+      "require_different_feature_distributions": true
+    },
+    "cycle_soh_generation": {
+      "min_cycles_per_cell": 180,
+      "max_cycles_per_cell": 300,
+      "initial_soh_range": [
+        0.98,
+        1.02
+      ],
+      "end_soh_range": [
+        0.75,
+        0.9
+      ],
+      "trajectory_shape": "nonlinear_degradation_with_optional_knee",
+      "allow_small_regeneration_noise": true,
+      "formula_template": "soh = initial_soh - a * normalized_cycle - b * max(0, normalized_cycle - knee)^2 + noise",
+      "constraints": [
+        "SOH should generally decrease with cycle_index",
+        "SOH must be clipped to [0.70, 1.05]",
+        "different cells must not have identical degradation trajectories",
+        "cycle_index must be integer starting at 1 for each cell"
+      ]
+    },
+    "feature_generation": {
+      "features_to_generate": [
+        "current_mean",
+        "current_standard_deviation",
+        "current_kurtosis",
+        "current_skewness",
+        "current_window_charging_time",
+        "current_window_accumulated_charge",
+        "current_curve_slope",
+        "current_curve_entropy",
+        "voltage_mean",
+        "voltage_standard_deviation",
+        "voltage_kurtosis",
+        "voltage_skewness",
+        "voltage_window_charging_time",
+        "voltage_window_accumulated_charge",
+        "voltage_curve_slope",
+        "voltage_curve_entropy",
+        "cycle_index",
+        "chemistry_code",
+        "nominal_capacity_ah",
+        "upper_cutoff_voltage",
+        "lower_cutoff_voltage",
+        "ambient_temperature_c",
+        "protocol_code",
+        "cell_age_group"
+      ],
+      "model_input_features": [
+        "current_mean",
+        "current_standard_deviation",
+        "current_kurtosis",
+        "current_skewness",
+        "current_window_charging_time",
+        "current_window_accumulated_charge",
+        "current_curve_slope",
+        "current_curve_entropy",
+        "voltage_mean",
+        "voltage_standard_deviation",
+        "voltage_kurtosis",
+        "voltage_skewness",
+        "voltage_window_charging_time",
+        "voltage_window_accumulated_charge",
+        "voltage_curve_slope",
+        "voltage_curve_entropy",
+        "cycle_index"
+      ],
+      "secondary_features_not_used_by_default": [
+        "chemistry_code",
+        "nominal_capacity_ah",
+        "upper_cutoff_voltage",
+        "lower_cutoff_voltage",
+        "ambient_temperature_c",
+        "protocol_code",
+        "cell_age_group"
+      ],
+      "generation_method": "feature_target_correlated_synthetic_generation",
+      "latent_variables": [
+        "normalized_cycle",
+        "soh",
+        "capacity_loss",
+        "cell_random_effect",
+        "chemistry_offset",
+        "protocol_offset"
+      ],
+      "feature_value_formula_template": "feature_raw = cell_offset + trend_strength * capacity_loss + nonlinear_strength * capacity_loss^2 + cycle_strength * normalized_cycle + chemistry_offset + noise; final model features are min-max scaled to [-1, 1] using train-set feature min/max",
+      "feature_correlation_policy": {
+        "primary_features": "medium_to_high_correlation_with_target",
+        "secondary_features": "weak_to_medium_correlation_or_optional",
+        "avoid_perfect_correlation": true,
+        "minimum_absolute_primary_feature_target_correlation_after_generation": 0.25,
+        "maximum_absolute_primary_feature_target_correlation_after_generation": 0.98
+      },
+      "feature_report_required": true,
+      "paper_feature_formula_reference": {
+        "current_and_voltage_feature_types": [
+          "mean",
+          "standard_deviation",
+          "kurtosis",
+          "skewness",
+          "charging_time",
+          "accumulated_charge",
+          "curve_slope",
+          "curve_entropy"
+        ],
+        "paper_voltage_window": "V in [V_end - 0.2, V_end]",
+        "paper_current_window": "I between 0.5 A and 0.1 A during constant-voltage charging",
+        "raw_signal_extraction_status": "not_executed_in_default_synthetic_mode"
+      }
+    },
+    "label_generation": {
+      "target_column": "soh",
+      "required_label_columns": [
+        "soh",
+        "capacity_loss"
+      ],
+      "optional_label_columns": [
+        "Q_cell_loss"
+      ],
+      "formulas": {
+        "capacity_loss": "1 - soh",
+        "Q_cell_loss": "capacity_loss",
+        "soh": "1 - capacity_loss"
+      }
+    },
+    "output_tables": {
+      "data_dir": "outputs/step4_dataset/paper1_wang_2024_pinn_battery_soh/data",
+      "reports_dir": "outputs/step4_dataset/paper1_wang_2024_pinn_battery_soh/reports",
+      "required_files": [
+        "cell_metadata.csv",
+        "cycle_soh_trajectories.csv",
+        "features.csv",
+        "labels.csv",
+        "model_dataset.csv",
+        "train.csv",
+        "val.csv",
+        "test.csv"
+      ],
+      "reports": [
+        "feature_generation_report.json",
+        "dataset_generation_report.md"
+      ]
+    }
+  },
+  "model_execution_plan": {
+    "model_family": "PINN",
+    "model_name": "executable_feature_level_PINN_F_G",
+    "framework": "PyTorch",
+    "input_features": [
+      "current_mean",
+      "current_standard_deviation",
+      "current_kurtosis",
+      "current_skewness",
+      "current_window_charging_time",
+      "current_window_accumulated_charge",
+      "current_curve_slope",
+      "current_curve_entropy",
+      "voltage_mean",
+      "voltage_standard_deviation",
+      "voltage_kurtosis",
+      "voltage_skewness",
+      "voltage_window_charging_time",
+      "voltage_window_accumulated_charge",
+      "voltage_curve_slope",
+      "voltage_curve_entropy",
+      "cycle_index"
+    ],
+    "target_column": "soh",
+    "train_val_test_data": {
+      "train_file": "train.csv",
+      "val_file": "val.csv",
+      "test_file": "test.csv"
+    },
+    "preprocessing": {
+      "feature_columns": [
+        "current_mean",
+        "current_standard_deviation",
+        "current_kurtosis",
+        "current_skewness",
+        "current_window_charging_time",
+        "current_window_accumulated_charge",
+        "current_curve_slope",
+        "current_curve_entropy",
+        "voltage_mean",
+        "voltage_standard_deviation",
+        "voltage_kurtosis",
+        "voltage_skewness",
+        "voltage_window_charging_time",
+        "voltage_window_accumulated_charge",
+        "voltage_curve_slope",
+        "voltage_curve_entropy",
+        "cycle_index"
+      ],
+      "target_column": "soh",
+      "scaler": "MinMaxScaler",
+      "fit_scaler_on": "train_only",
+      "transform": [
+        "train",
+        "val",
+        "test"
+      ],
+      "handle_missing_values": "raise_error_unless_user_allows_imputation",
+      "feature_range": [
+        -1,
+        1
+      ]
+    },
+    "model_definition": {
+      "paper_reported": false,
+      "executable_spec": {
+        "class_name": "ExecutablePINN",
+        "input_dim": 17,
+        "output_dim": 1,
+        "solution_network_F": {
+          "description": "Approximates f(t_i, x_i) mapping cycle/features to SOH.",
+          "layers": [
+            {
+              "type": "LinearSin",
+              "in_features": 17,
+              "out_features": 60,
+              "activation": "sin"
+            },
+            {
+              "type": "LinearSin",
+              "in_features": 60,
+              "out_features": 60,
+              "activation": "sin"
+            },
+            {
+              "type": "Linear",
+              "in_features": 60,
+              "out_features": 32,
+              "activation": "identity"
+            },
+            {
+              "type": "LinearSin",
+              "in_features": 32,
+              "out_features": 32,
+              "activation": "sin"
+            },
+            {
+              "type": "Linear",
+              "in_features": 32,
+              "out_features": 1,
+              "activation": "sigmoid_scaled_to_[0,1.2]"
+            }
+          ]
+        },
+        "dynamics_network_G": {
+          "description": "Approximates g(.) degradation dynamics term from SOH, cycle, and selected latent derivatives.",
+          "input_construction": "concat(predicted_soh, scaled_cycle_index, first_order_feature_summary, capacity_loss_proxy)",
+          "input_dim": 4,
+          "layers": [
+            {
+              "type": "LinearSin",
+              "in_features": 4,
+              "out_features": 60,
+              "activation": "sin"
+            },
+            {
+              "type": "LinearSin",
+              "in_features": 60,
+              "out_features": 60,
+              "activation": "sin"
+            },
+            {
+              "type": "Linear",
+              "in_features": 60,
+              "out_features": 1,
+              "activation": "identity"
+            }
+          ]
+        },
+        "initialization": "torch_default_initialization_with_seed_42",
+        "forward_outputs": [
+          "predicted_soh",
+          "dynamics_rate"
+        ],
+        "inference_output": "predicted_soh"
+      },
+      "paper_basis": [
+        "The paper reports F(.) and G(.) as small fully connected neural networks.",
+        "Supplementary snippets show Linear+Sin and Linear layers for PINN/MLP structures, but not enough complete context to guarantee exact implementation in this 10-cell synthetic setting."
+      ]
+    },
+    "loss_plan": {
+      "paper_reported_terms": [
+        "L_data",
+        "L_mono",
+        "L_PDE"
+      ],
+      "executable_loss": {
+        "total_loss_formula": "L = L_data + alpha * L_mono + beta * L_pde",
+        "L_data": {
+          "type": "MSELoss",
+          "formula": "mean((soh_true - soh_pred)^2)"
+        },
+        "L_mono": {
+          "type": "monotonicity_penalty",
+          "formula": "mean(relu(d_soh_pred_d_cycle)^2)",
+          "implementation": "Use torch.autograd.grad on scaled cycle_index input. Penalize positive derivative because degradation SOH should not increase with cycle."
+        },
+        "L_pde": {
+          "type": "degradation_dynamics_residual",
+          "formula": "mean((d_soh_pred_d_cycle - G_input_rate)^2)",
+          "implementation": "Compute d_soh_pred_d_cycle with autograd; pass constructed dynamics inputs through G; penalize mismatch."
+        },
+        "alpha": 0.7,
+        "beta": 20.0,
+        "loss_weights_paper_reported_for_synthetic_setting": false,
+        "reduction": "mean"
+      }
+    },
+    "training_plan": {
+      "paper_reported": false,
+      "optimizer": {
+        "name": "Adam",
+        "paper_reported": true,
+        "learning_rate": 0.001,
+        "learning_rate_paper_reported": false,
+        "weight_decay": 0.0,
+        "weight_decay_paper_reported": false
+      },
+      "batch_size": {
+        "value": 256,
+        "paper_reported_context": "reported for XJTU; synthetic 10-cell reproduction adopts this value",
+        "paper_reported_for_synthetic_setting": false
+      },
+      "epochs": {
+        "max_epochs": 300,
+        "paper_reported": false
+      },
+      "early_stopping": {
+        "enabled": true,
+        "monitor": "val_RMSE",
+        "mode": "min",
+        "patience": 40,
+        "min_delta": 1e-06,
+        "restore_best_weights": true,
+        "paper_reported": false
+      },
+      "seed": 42,
+      "seed_paper_reported": false,
+      "device": "cuda_if_available_else_cpu",
+      "gradient_clipping": {
+        "enabled": true,
+        "max_norm": 5.0,
+        "paper_reported": false
+      },
+      "shuffle_train_batches": true,
+      "save_best_model_to": "trained_model.pth",
+      "log_every_n_epochs": 10,
+      "required_training_outputs": [
+        "trained_model.pth",
+        "scaler.pkl",
+        "training_history.csv",
+        "training_report.md"
+      ],
+      "effective_repeat_runs": 1
+    },
+    "validation_plan": {
+      "validation_split": "cell-level validation set containing cell_007 and cell_008",
+      "validation_frequency": "each_epoch",
+      "metrics": [
+        "val_RMSE",
+        "val_R2",
+        "val_MAE"
+      ],
+      "model_selection": "select checkpoint with lowest val_RMSE",
+      "no_test_leakage": true,
+      "validation_outputs": [
+        "validation_predictions.csv",
+        "training_history.csv"
+      ]
+    },
+    "testing_plan": {
+      "test_split": "cell-level test set containing cell_009 and cell_010",
+      "load_checkpoint": "trained_model.pth",
+      "apply_train_fitted_scaler": true,
+      "predict_columns": [
+        "predicted_soh"
+      ],
+      "required_prediction_columns": [
+        "cell_id",
+        "cycle_index",
+        "true_soh",
+        "predicted_soh"
+      ],
+      "metrics": [
+        "test_RMSE",
+        "test_R2",
+        "test_MAE",
+        "test_MAPE"
+      ],
+      "plots": [
+        "test_soh_true_vs_predicted.png"
+      ],
+      "save_outputs": [
+        "metrics.json",
+        "test_predictions.csv",
+        "test_soh_true_vs_predicted.png"
+      ]
+    }
+  },
+  "evaluation_plan": {
+    "metrics": [
+      {
+        "name": "RMSE",
+        "split": "test",
+        "formula": "sqrt(mean((y_true - y_pred)^2))",
+        "output_key": "test_RMSE"
+      },
+      {
+        "name": "R2",
+        "split": "test",
+        "formula": "1 - sum((y_true - y_pred)^2) / sum((y_true - mean(y_true))^2)",
+        "output_key": "test_R2"
+      }
+    ],
+    "soh_conversion_rule": {
+      "if_target_is_soh": "use prediction directly",
+      "if_target_is_capacity_loss": "predicted_soh = 1 - predicted_capacity_loss",
+      "if_target_is_Q_cell_loss": "predicted_soh = 1 - predicted_Q_cell_loss"
+    },
+    "plots": [
+      {
+        "name": "test_soh_true_vs_predicted",
+        "type": "scatter_or_line",
+        "x": "cycle_index or sample_index",
+        "y_true": "true_soh",
+        "y_pred": "predicted_soh",
+        "split": "test",
+        "output_file": "test_soh_true_vs_predicted.png"
+      }
+    ],
+    "prediction_outputs": [
+      "test_predictions.csv"
+    ]
+  },
+  "outputs_plan": {
+    "dataset_outputs": [
+      "cell_metadata.csv",
+      "cycle_soh_trajectories.csv",
+      "features.csv",
+      "labels.csv",
+      "model_dataset.csv",
+      "train.csv",
+      "val.csv",
+      "test.csv"
+    ],
+    "model_outputs": [
+      "trained_model.pkl or trained_model.pth",
+      "metrics.json",
+      "test_predictions.csv",
+      "test_soh_true_vs_predicted.png",
+      "training_report.md"
+    ]
+  },
+  "missing_details_and_filled_assumptions": [
+    {
+      "item": "Original raw experimental data are not used in this executable reproduction.",
+      "filled_assumption": "Generate a feature-level synthetic dataset with 10 cells and per-cycle SOH trajectories.",
+      "paper_reported": false,
+      "impact": "prevents exact numerical reproduction"
+    },
+    {
+      "item": "Exact train/validation/test battery IDs for a 10-cell setting are not paper-reported.",
+      "filled_assumption": "Use deterministic cell split: cell_001-cell_006 train, cell_007-cell_008 validation, cell_009-cell_010 test.",
+      "paper_reported": false,
+      "impact": "required for executable 6/2/2 split"
+    },
+    {
+      "item": "The paper reports approximately 6:2:2 split by battery, but not for exactly 10 synthetic cells.",
+      "filled_assumption": "Use exactly 6/2/2 cells by cell-level split with no overlap.",
+      "paper_reported": false,
+      "impact": "conforms to user hard constraint but is not original benchmark"
+    },
+    {
+      "item": "Learning rate is not present in supplied paper/supplementary excerpts.",
+      "filled_assumption": "Use Adam learning rate 0.001.",
+      "paper_reported": false,
+      "impact": "affects optimization and numerical results"
+    },
+    {
+      "item": "Epoch count is not present in supplied paper/supplementary excerpts.",
+      "filled_assumption": "Train for at most 300 epochs with early stopping.",
+      "paper_reported": false,
+      "impact": "affects convergence and numerical results"
+    },
+    {
+      "item": "Early stopping protocol and model-selection criterion are not specified in supplied excerpts.",
+      "filled_assumption": "Select the checkpoint with lowest validation RMSE using patience 40.",
+      "paper_reported": false,
+      "impact": "affects final checkpoint"
+    },
+    {
+      "item": "Random seed is not specified in supplied excerpts.",
+      "filled_assumption": "Use seed 42 for dataset generation, split, model initialization, and dataloader shuffling.",
+      "paper_reported": false,
+      "impact": "affects reproducibility and numerical results"
+    },
+    {
+      "item": "Exact complete PINN architecture is not fully recoverable from supplied excerpts for this synthetic setting.",
+      "filled_assumption": "Implement F(.) as a 17-60-60-32-32-1 fully connected network with LinearSin intermediate activations; implement G(.) as a 4-60-60-1 network.",
+      "paper_reported": false,
+      "impact": "affects model capacity and numerical results"
+    },
+    {
+      "item": "The paper's exact PDE/degradation equation residual implementation is not fully specified in supplied excerpts.",
+      "filled_assumption": "Use executable residual L_pde = mean((d_soh_pred_d_cycle - G(.))^2).",
+      "paper_reported": false,
+      "impact": "approximates the physics-informed training objective"
+    },
+    {
+      "item": "Loss weights alpha and beta are dataset-specific in paper/supplementary material and not defined for synthetic mixed_NMC_LFP data.",
+      "filled_assumption": "Use alpha=0.7 and beta=20.0 as an executable default.",
+      "paper_reported": false,
+      "impact": "affects strength of physics losses"
+    },
+    {
+      "item": "Whether cycle/time is min-max normalized is not fully explicit in supplied materials.",
+      "filled_assumption": "Include cycle_index in the train-fitted MinMaxScaler to [-1, 1] along with other model input features.",
+      "paper_reported": false,
+      "impact": "affects model input scale"
+    },
+    {
+      "item": "SOH target normalization is not stated as required.",
+      "filled_assumption": "Do not normalize SOH labels; train directly on SOH.",
+      "paper_reported": false,
+      "impact": "affects loss scale"
+    },
+    {
+      "item": "Synthetic feature correlation strengths are not paper-reported.",
+      "filled_assumption": "Generate primary features with medium-to-high but imperfect correlation with SOH/capacity_loss.",
+      "paper_reported": false,
+      "impact": "synthetic data difficulty differs from original data"
+    },
+    {
+      "item": "Secondary metadata features are not paper-reported as model inputs.",
+      "filled_assumption": "Generate chemistry/protocol metadata for variability but exclude all secondary features from model_input_features.",
+      "paper_reported": false,
+      "impact": "satisfies default primary-feature strategy"
+    },
+    {
+      "item": "Weight decay is not specified in supplied excerpts.",
+      "filled_assumption": "Use weight_decay=0.0.",
+      "paper_reported": false,
+      "impact": "affects regularization"
+    },
+    {
+      "item": "Gradient clipping is not specified in supplied excerpts.",
+      "filled_assumption": "Use max_norm=5.0 to make synthetic PINN training stable.",
+      "paper_reported": false,
+      "impact": "affects optimization trajectory"
+    }
+  ],
+  "codex_decisions": [
+    {
+      "decision": "Set model_input_features exactly equal to primary_features.",
+      "reason": "Hard constraint and paper-reported inputs are 16 engineered features plus cycle/time."
+    },
+    {
+      "decision": "Generate secondary features but exclude them by default.",
+      "reason": "Hard constraint and paper does not identify chemistry/protocol metadata as direct PINN inputs."
+    },
+    {
+      "decision": "Use feature-level synthetic data instead of raw voltage/current extraction.",
+      "reason": "Original raw data are not available in the requested executable plan context."
+    },
+    {
+      "decision": "Use PyTorch PINN with F(.) and G(.) components.",
+      "reason": "Paper primary model family is PINN using neural networks F(.) and G(.)."
+    },
+    {
+      "decision": "Add R2 to evaluation metrics.",
+      "reason": "User hard constraint requires test R2, even though paper emphasized MAE/MAPE/RMSE."
+    },
+    {
+      "decision": "Use exactly 10 cells and deterministic 6/2/2 split.",
+      "reason": "User hard constraint requires 10 cells split by cell."
+    }
+  ],
+  "validation_rules_for_step4": [
+    "Dataset must contain exactly 10 unique cells.",
+    "Train/val/test split must be cell-level with no cell overlap.",
+    "Train/val/test cell counts must be 6/2/2.",
+    "All model_input_features must exist in train.csv, val.csv, and test.csv.",
+    "Target column must exist.",
+    "If target is capacity_loss or Q_cell_loss, SOH must be computable as 1 - target.",
+    "Test predictions must include true_soh and predicted_soh.",
+    "metrics.json must include test_RMSE and test_R2.",
+    "test_soh_true_vs_predicted.png must be generated."
+  ],
+  "evidence": [
+    {
+      "source": "paper_md:0001",
+      "text": "The SOH of a battery is defined as the ratio of the current available capacity to the initial capacity."
+    },
+    {
+      "source": "paper_md:0005",
+      "text": "For the current data, we choose the data with the current between 0.5 A and 0.1 A during the constant voltage charging."
+    },
+    {
+      "source": "paper_md:0005",
+      "text": "Define the charge cut-off voltage of a battery as V_end, and the voltage data whose value is within [V_end-0.2, V_end] V is selected."
+    },
+    {
+      "source": "paper_md:0005",
+      "text": "The mean, standard deviation, kurtosis, skewness, charging time, accumulated charge, curve slope, and curve entropy from the selected current and voltage curves, respectively ... are extracted."
+    },
+    {
+      "source": "paper_md:0006",
+      "text": "The extracted 16 features and time (cycle) are used as inputs of the proposed PINN to estimate SOH."
+    },
+    {
+      "source": "paper_md:0006",
+      "text": "The min–max normalization is performed on the features. That is, all features are scaled to the range [−1,1]."
+    },
+    {
+      "source": "paper_md:0003",
+      "text": "The proposed PINN consists of a solution function f(·) mapping features to SOH and a nonlinear function g(·) modeling battery degradation dynamics; f(·) and g(·) are replaced by small fully connected neural networks F(·) and G(·)."
+    },
+    {
+      "source": "paper_md:0003",
+      "text": "The training losses are described as data term loss L_data, monotonicity loss L_mono, and PDE loss L_PDE constrained by the degradation equation."
+    },
+    {
+      "source": "paper_md:0006",
+      "text": "Training batteries, validation batteries, and test batteries were divided approximately in the ratio of 6:2:2."
+    },
+    {
+      "source": "paper_md:0008",
+      "text": "MAPE is the mean absolute percentage error, and RMSE is the root mean square error."
+    },
+    {
+      "source": "supplementary_md:0008",
+      "text": "Supplementary Note 2 gives formulas for mean, standard deviation, kurtosis, skewness, charging time, accumulated charge, curve slope, and entropy."
+    },
+    {
+      "source": "supplementary_md:0005",
+      "text": "The proposed PINN was learned by minimizing the loss defined in Equation (9) of the Manuscript File, and the Adam optimizer was used in the training phase."
+    },
+    {
+      "source": "supplementary_md:0005",
+      "text": "The trade-off parameters alpha and beta are set to 0.7 and 20 for XJTU battery dataset, 1 and 50 for TJU and MIT datasets, and 0.5 and 80 for HUST dataset. Batch size is 256 for XJTU and 512 for other datasets."
+    }
+  ],
+  "step4_runtime": {
+    "fallback_allowed": true
+  }
+}
