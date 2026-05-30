@@ -1,0 +1,40 @@
+{
+  "num_cells": 10,
+  "rows": 2259,
+  "train_cells": [
+    "cell_001",
+    "cell_002",
+    "cell_003",
+    "cell_004",
+    "cell_005",
+    "cell_006"
+  ],
+  "val_cells": [
+    "cell_007",
+    "cell_008"
+  ],
+  "test_cells": [
+    "cell_009",
+    "cell_010"
+  ],
+  "input_feature_target_correlations": {
+    "current_mean": 0.486614211016093,
+    "current_standard_deviation": -0.6797496679449706,
+    "current_kurtosis": -0.6498374951618598,
+    "current_skewness": -0.7133282578097562,
+    "current_window_charging_time": -0.9195764270303541,
+    "current_window_accumulated_charge": 0.8996209441943623,
+    "current_curve_slope": 0.7319481599878813,
+    "current_curve_entropy": -0.836214297317481,
+    "voltage_mean": 0.9508948486015685,
+    "voltage_standard_deviation": -0.9403686302955235,
+    "voltage_kurtosis": -0.6751134145485933,
+    "voltage_skewness": 0.7698740372747499,
+    "voltage_window_charging_time": -0.9228838361255965,
+    "voltage_window_accumulated_charge": 0.9232674212771622,
+    "voltage_curve_slope": -0.6690895028267685,
+    "voltage_curve_entropy": -0.8601979027967186,
+    "cycle_index": -0.8302131549027981
+  },
+  "note": "Feature-level synthetic data: raw voltage/current extraction windows are represented by correlated engineered features, not by raw signal processing."
+}
